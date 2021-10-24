@@ -10,7 +10,8 @@ public class CardSlot : MonoBehaviour
 {
     public CardSlotType cardSlotType;
     public CardType cardType;
-    public Card belowCard;
+    public Card parentCard, currentCard;
+    public bool atAceBase = false;
     public Image image;
     private void Awake()
     {
@@ -18,4 +19,23 @@ public class CardSlot : MonoBehaviour
         CardController.cardSlots.Add(image);
         image.raycastTarget = false;
     }
+
+    public void Allocatted(Card _card)
+    {
+        CardController.cardSlots.Remove(image);
+        image.raycastTarget = false;
+        currentCard = _card;
+    }
+    
+    public void DeAllocatted()
+    {
+        CardController.cardSlots.Add(image);
+        image.raycastTarget = false;
+        currentCard = null;
+        if (parentCard != null && !parentCard.isOpened)
+        {
+            parentCard.m_Animator.SetTrigger("Open");
+        }
+    }
+    
 }
