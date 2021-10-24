@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Card
   - CardSlot
+  - ClosedCards
   layers:
   - Default
   - TransparentFX

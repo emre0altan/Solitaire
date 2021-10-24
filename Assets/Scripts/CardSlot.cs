@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum CardSlotType{AceBase, EmptySlot, AboveCard}
+public enum CardSlotType{AceBase, EmptySlot, ChildSlot, OpenedCardsRightTop}
 
 public class CardSlot : MonoBehaviour
 {
@@ -16,25 +16,39 @@ public class CardSlot : MonoBehaviour
     private void Awake()
     {
         if (CardController.cardSlots == null) CardController.cardSlots = new List<Image>();
+        if (image != null && cardSlotType != CardSlotType.ChildSlot)
+        {
+            AddToSlotsList();
+        }
+    }
+
+    public void AddToSlotsList()
+    {
         CardController.cardSlots.Add(image);
         image.raycastTarget = false;
     }
 
     public void Allocatted(Card _card)
     {
-        CardController.cardSlots.Remove(image);
-        image.raycastTarget = false;
+        if (image != null)
+        {
+            CardController.cardSlots.Remove(image);
+            image.raycastTarget = false;
+        }
         currentCard = _card;
     }
     
     public void DeAllocatted()
     {
-        CardController.cardSlots.Add(image);
-        image.raycastTarget = false;
+        if (image != null)
+        {
+            CardController.cardSlots.Add(image);
+            image.raycastTarget = false;
+        }
         currentCard = null;
         if (parentCard != null && !parentCard.isOpened)
         {
-            parentCard.m_Animator.SetTrigger("Open");
+            parentCard.OpenCard();
         }
     }
     

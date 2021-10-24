@@ -60,7 +60,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -92,6 +92,7 @@ MonoBehaviour:
   cardType: 0
   parentCard: {fileID: 6604432566601085765}
   currentCard: {fileID: 0}
+  atAceBase: 0
   image: {fileID: 4064697180833211547}
 --- !u!1 &6413072609525003590
 GameObject:
@@ -405,7 +406,7 @@ GameObject:
   - component: {fileID: 6604432566601085766}
   - component: {fileID: 6604432566601085767}
   - component: {fileID: 6604432566601085765}
-  - component: {fileID: 2837899107015645419}
+  - component: {fileID: 3337907372673201848}
   m_Layer: 5
   m_Name: Card
   m_TagString: Card
@@ -433,10 +434,10 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 128.3722, y: 193.15}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 540, y: -1170}
+  m_SizeDelta: {x: 128.3722, y: 193.15002}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6604432566601085766
 CanvasRenderer:
@@ -490,8 +491,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_CardType: 1
   m_CardValue: 0
+  m_Animator: {fileID: 3337907372673201848}
   m_CardImage: {fileID: 6604432566601085767}
-  m_Animator: {fileID: 2837899107015645419}
   m_ChildSlot: {fileID: 3245019047223188961}
   m_AllocatedSlot: {fileID: 0}
   parent: {fileID: 0}
@@ -499,6 +500,7 @@ MonoBehaviour:
   isOpened: 0
   inOriginalPosition: 1
   selectionBorder: {fileID: 7428527246025558713}
+  backImage: {fileID: 6413072609525003590}
   leftTop: {fileID: 6604432565619799282}
   rightTop: {fileID: 6604432566469908820}
   body: {fileID: 6604432564671270734}
@@ -523,7 +525,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 20ef93f985a93d84a96b26119f703d41, type: 3}
   red: {r: 0.7686275, g: 0.18431373, b: 0.21568629, a: 1}
   black: {r: 0, g: 0, b: 0, a: 1}
---- !u!95 &2837899107015645419
+--- !u!95 &3337907372673201848
 Animator:
   serializedVersion: 3
   m_ObjectHideFlags: 0

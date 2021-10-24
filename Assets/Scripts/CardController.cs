@@ -9,6 +9,18 @@ using UnityEngine.EventSystems;
 public class CardController : MonoBehaviour
 {
     public static List<Image> cardSlots;
+    public static CardController Instance;
+
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
     
     [SerializeField] Card holdingCard;
     [SerializeField] GraphicRaycaster m_Raycaster;
@@ -45,8 +57,8 @@ public class CardController : MonoBehaviour
     
     public void OnDown(TouchInput touchInput)
     {
-         List<RaycastResult> results = RaycastUI(touchInput.ScreenPosition);
-
+        List<RaycastResult> results = RaycastUI(touchInput.ScreenPosition);
+        Debug.Log(results[0].gameObject.name);
         if (results.Count > 0 && results[0].gameObject.CompareTag("Card"))
         {
             UpdateCardSlots(true);
@@ -60,12 +72,15 @@ public class CardController : MonoBehaviour
                 tempCard.m_CardImage.raycastTarget = false;
             }
             
-            if(holdingCard.inOriginalPosition) holdingCardOriginalSlot = holdingCard.m_AllocatedSlot;
-            holdingCard.inOriginalPosition = false;
+            holdingCardOriginalSlot = holdingCard.m_AllocatedSlot;
             holdingCard.m_CardImage.raycastTarget = false;
             holdingCard.m_ChildSlot.image.raycastTarget = false;
             holdingCard.selectionBorder.SetActive(true);
-            holdingCard.m_AllocatedSlot.image.raycastTarget = false;
+            if(holdingCard.m_AllocatedSlot.image != null) holdingCard.m_AllocatedSlot.image.raycastTarget = false;
+        }
+        else if (results.Count > 0 && results[0].gameObject.CompareTag("ClosedCards"))
+        {
+            CardDealer.Instance.OpenClosedCard();
         }
     }
 
@@ -99,11 +114,14 @@ public class CardController : MonoBehaviour
     {
         if (_cardSlot.cardSlotType == CardSlotType.AceBase)
         {
+            Debug.Log("ACE1");
             if (CheckAceBase(_card, _cardSlot))
             {
                 Debug.Log("ACE BASE SLOT");
                 _card.m_ChildSlot.atAceBase = true;
                 ReAllocation(_card, _cardSlot);
+                _card.m_ChildSlot.cardSlotType = CardSlotType.AceBase;
+                _card.m_ChildSlot.transform.localPosition = Vector3.zero;
                 return true;
             }
             else return false;
@@ -113,7 +131,12 @@ public class CardController : MonoBehaviour
             if (CheckEmptySlot(_card, _cardSlot))
             {
                 Debug.Log("EMPTY SLOT");
-                _card.m_ChildSlot.atAceBase = false;
+                if (_card.m_ChildSlot.atAceBase)
+                {
+                    _card.m_ChildSlot.atAceBase = false;
+                    _card.m_ChildSlot.cardSlotType = CardSlotType.ChildSlot;
+                    _card.m_ChildSlot.transform.localPosition = new Vector3(0, -50, 0);
+                }
                 ReAllocation(_card, _cardSlot);
                 return true;
             }
@@ -122,7 +145,12 @@ public class CardController : MonoBehaviour
         else if (CheckChildSlot(_card, _cardSlot))
         {
             Debug.Log("CHILD SLOT");
-            _card.m_ChildSlot.atAceBase = false;
+            if (_card.m_ChildSlot.atAceBase)
+            {
+                _card.m_ChildSlot.atAceBase = false;
+                _card.m_ChildSlot.cardSlotType = CardSlotType.ChildSlot;
+                _card.m_ChildSlot.transform.localPosition = new Vector3(0, -50, 0);
+            }
             ReAllocation(_card, _cardSlot);
             return true;
         }
@@ -143,7 +171,6 @@ public class CardController : MonoBehaviour
         _tmpCard.transform.DOMove(holdingCardOriginalSlot.transform.position, 0.2f).SetEase(Ease.Linear).OnComplete(() =>
         {
             _tmpCard.m_CardImage.raycastTarget = true;
-            _tmpCard.inOriginalPosition = true;
         });
         ReAllocateChildren(_tmpCard, holdingCardOriginalSlot);
     }
@@ -158,13 +185,17 @@ public class CardController : MonoBehaviour
 
     void ReAllocation(Card _card, CardSlot newCardSlot)
     {
-        _card.m_AllocatedSlot.DeAllocatted();
+        if (_card.m_AllocatedSlot.cardSlotType == CardSlotType.OpenedCardsRightTop)
+        {
+            CardDealer.Instance.RemoveCard(_card);
+        }
+        else _card.m_AllocatedSlot.DeAllocatted();
+        
         _card.m_AllocatedSlot = newCardSlot;
         newCardSlot.Allocatted(_card);
         _card.transform.DOMove(newCardSlot.transform.position, 0.3f).OnComplete(() =>
         {
             _card.m_CardImage.raycastTarget = true;
-            _card.inOriginalPosition = true;
         });
         
         if (_card.parent != null) _card.parent.child = null;
@@ -180,14 +211,15 @@ public class CardController : MonoBehaviour
         int i = 1;
         while (temporaryCard != null && i < 20)
         {
+            Card tmpp = temporaryCard;
             temporaryCard.transform.DOMove(_newParentSlot.transform.position + _parent.m_ChildSlot.transform.localPosition * i, 0.2f).SetEase(Ease.Linear).OnComplete(() =>
             {
-                temporaryCard.m_CardImage.raycastTarget = true;
-                temporaryCard.inOriginalPosition = true;
+                tmpp.m_CardImage.raycastTarget = true;
             });
             temporaryCard = temporaryCard.child;
             i++;
         }
+        
     }
 
 
@@ -195,7 +227,14 @@ public class CardController : MonoBehaviour
 
     bool CheckAceBase(Card _card, CardSlot _cardSlot)
     {
-        return _card.m_CardValue == CardValue.Ace && _card.m_CardType == _cardSlot.cardType;
+
+        if (_cardSlot.parentCard != null)
+        {
+            Debug.Log("A-"+(_cardSlot.parentCard.m_CardValue == _card.m_CardValue - 1));
+            return (_cardSlot.parentCard.m_CardValue == _card.m_CardValue - 1) && _card.m_CardType == _cardSlot.cardType;
+        }
+        else
+            return _card.m_CardValue == CardValue.Ace && _card.m_CardType == _cardSlot.cardType;
     }
     
     bool CheckEmptySlot(Card _card, CardSlot _cardSlot)
@@ -212,9 +251,7 @@ public class CardController : MonoBehaviour
                       (_card.m_CardType == CardType.HEART ||
                        _card.m_CardType == CardType.DIAMOND))) && _cardSlot.parentCard.m_CardValue == _card.m_CardValue + 1;
         
-        bool aceBaseFit = _card.m_ChildSlot.atAceBase && _cardSlot.parentCard.m_CardType == _card.m_CardType &&
-                          _cardSlot.parentCard.m_CardValue == _card.m_CardValue - 1;
-        return canGo || aceBaseFit;
+        return canGo;
     }
 
     #endregion
