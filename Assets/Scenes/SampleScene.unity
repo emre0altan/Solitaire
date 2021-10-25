@@ -3089,6 +3089,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2062795142}
     m_Modifications:
+    - target: {fileID: 6413072609525003590, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6604432564671270734, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -3561,10 +3565,22 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HomeScreen, Assembly-CSharp
-        m_MethodName: ExitGame
-        m_Mode: 1
+      - m_Target: {fileID: 157080412}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 1573951486}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -4832,6 +4848,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2062795142}
     m_Modifications:
+    - target: {fileID: 6413072609525003590, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6604432564671270734, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -6762,6 +6782,7 @@ GameObject:
   - component: {fileID: 1613340343}
   - component: {fileID: 1613340342}
   - component: {fileID: 1613340347}
+  - component: {fileID: 1613340348}
   m_Layer: 5
   m_Name: Canvas-Game
   m_TagString: Untagged
@@ -6893,6 +6914,19 @@ MonoBehaviour:
   - {fileID: 3404509501094876574}
   - {fileID: 1020823370377908758}
   cardPrefab: {fileID: 6604432566601085765, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
+--- !u!114 &1613340348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613340341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25f955ecd68744745aa3c121c43b9fcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentCommand: -1
 --- !u!1 &1638872048
 GameObject:
   m_ObjectHideFlags: 0
@@ -8442,9 +8476,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: HomeScreen, Assembly-CSharp
-        m_MethodName: LeaderBoard
+      - m_Target: {fileID: 1613340348}
+        m_TargetAssemblyTypeName: MoveController, Assembly-CSharp
+        m_MethodName: UndoCommand
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -9172,6 +9206,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2062795142}
     m_Modifications:
+    - target: {fileID: 6413072609525003590, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6604432566601085760, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -10077,6 +10115,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2062795142}
     m_Modifications:
+    - target: {fileID: 6413072609525003590, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6604432564671270734, guid: 98864b35c4a2474448c8036274ce5a2f, type: 3}
       propertyPath: m_Sprite
       value: 

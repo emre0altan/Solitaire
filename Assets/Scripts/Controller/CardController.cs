@@ -38,90 +38,97 @@ public class CardController : MonoBehaviour
         TouchManager.Instance.onTouchEnded += OnUp;
     }
 
+    #region Callbacks
+
     public void OnMove(TouchInput touchInput)
     {
         if (holdingCard != null)
         {
-            holdingCard.transform.position = touchInput.ScreenPosition;
-            tempChildCard = holdingCard.child;
-            int i = 0;
-            while (tempChildCard != null && i < 20)
-            {
-                tempChildCard.transform.position = Vector3.Lerp(tempChildCard.transform.position,
-                    tempChildCard.parent.m_ChildSlot.transform.position, 0.2f);
-                tempChildCard = tempChildCard.child;
-                i++;
-            }
+            MoveWithChildren(touchInput);
         }
     }
     
     public void OnDown(TouchInput touchInput)
     {
-        List<RaycastResult> results = RaycastUI(touchInput.ScreenPosition);
-        Debug.Log(results[0].gameObject.name);
-        if (results.Count > 0 && results[0].gameObject.CompareTag("Card"))
+        GameObject result = RaycastUI(touchInput.ScreenPosition);
+        if(result == null) return;
+
+        if (result.CompareTag("Card"))
         {
-            UpdateCardSlots(true);
-            holdingCard = results[0].gameObject.GetComponent<Card>();
-            Card tempCard = holdingCard;
-            tempCard.transform.SetAsLastSibling();
-            while (tempCard.child != null)
-            {
-                tempCard = tempCard.child;
-                tempCard.transform.SetAsLastSibling();
-                tempCard.m_CardImage.raycastTarget = false;
-            }
-            
-            holdingCardOriginalSlot = holdingCard.m_AllocatedSlot;
-            holdingCard.m_CardImage.raycastTarget = false;
-            holdingCard.m_ChildSlot.image.raycastTarget = false;
-            holdingCard.selectionBorder.SetActive(true);
-            if(holdingCard.m_AllocatedSlot.image != null) holdingCard.m_AllocatedSlot.image.raycastTarget = false;
+            HoldWithChildren(result.GetComponent<Card>());
         }
-        else if (results.Count > 0 && results[0].gameObject.CompareTag("ClosedCards"))
+        else if (result.CompareTag("ClosedCards"))
         {
             CardDealer.Instance.OpenClosedCard();
         }
     }
-
+    
     public void OnUp(TouchInput touchInput)
     {
         if (holdingCard != null)
         {
             Card tmpCard = holdingCard;
             holdingCard = null;
-            
-            List<RaycastResult>results = RaycastUI(touchInput.ScreenPosition);
-            if (results.Count > 0 && results[0].gameObject.CompareTag("CardSlot"))
+            GameObject result = RaycastUI(touchInput.ScreenPosition);
+            if (result != null && result.CompareTag("CardSlot"))
             {
-                CardSlot _cardSlot = results[0].gameObject.GetComponent<CardSlot>();
-                if (!CanCardGoThere(tmpCard, _cardSlot))
-                {
-                    SendHoldingCardToOriginalPosition(tmpCard);
-                }
+                CardSlot _cardSlot = result.GetComponent<CardSlot>();
+                if (!TryToPutCard(tmpCard, _cardSlot)) SendHoldingCardToOriginalPosition(tmpCard);
             }
             else
-            {
                 SendHoldingCardToOriginalPosition(tmpCard);
-            }
 
             tmpCard.selectionBorder.SetActive(false);
         }
         UpdateCardSlots(false);
     }
 
-    public bool CanCardGoThere(Card _card, CardSlot _cardSlot)
+    #endregion
+    
+    #region Card Movements
+
+    void MoveWithChildren(TouchInput touchInput)
+    {
+        holdingCard.transform.position = touchInput.ScreenPosition;
+        tempChildCard = holdingCard.child;
+        int i = 0;
+        while (tempChildCard != null && i < 20)
+        {
+            tempChildCard.transform.position = Vector3.Lerp(tempChildCard.transform.position,
+                tempChildCard.parent.m_ChildSlot.transform.position, 0.2f);
+            tempChildCard = tempChildCard.child;
+            i++;
+        }
+    }
+    void HoldWithChildren(Card _card)
+    {
+        UpdateCardSlots(true);
+        holdingCard = _card;
+        Card tempCard = holdingCard;
+        tempCard.transform.SetAsLastSibling();
+        while (tempCard.child != null)
+        {
+            tempCard = tempCard.child;
+            tempCard.transform.SetAsLastSibling();
+            tempCard.m_CardImage.raycastTarget = false;
+        }
+            
+        holdingCardOriginalSlot = holdingCard.m_AllocatedSlot;
+        holdingCard.m_CardImage.raycastTarget = false;
+        holdingCard.m_ChildSlot.image.raycastTarget = false;
+        holdingCard.selectionBorder.SetActive(true);
+        if(holdingCard.m_AllocatedSlot.image != null) holdingCard.m_AllocatedSlot.image.raycastTarget = false;
+    }
+
+    public bool TryToPutCard(Card _card, CardSlot _cardSlot)
     {
         if (_cardSlot.cardSlotType == CardSlotType.AceBase)
         {
-            Debug.Log("ACE1");
             if (CheckAceBase(_card, _cardSlot))
             {
-                Debug.Log("ACE BASE SLOT");
-                _card.m_ChildSlot.atAceBase = true;
-                ReAllocation(_card, _cardSlot);
-                _card.m_ChildSlot.cardSlotType = CardSlotType.AceBase;
-                _card.m_ChildSlot.transform.localPosition = Vector3.zero;
+                //Relocation(_card, _cardSlot);
+                MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
+                UpdateToAceBaseType(_card.m_ChildSlot, true);
                 return true;
             }
             else return false;
@@ -130,51 +137,40 @@ public class CardController : MonoBehaviour
         {
             if (CheckEmptySlot(_card, _cardSlot))
             {
-                Debug.Log("EMPTY SLOT");
-                if (_card.m_ChildSlot.atAceBase)
-                {
-                    _card.m_ChildSlot.atAceBase = false;
-                    _card.m_ChildSlot.cardSlotType = CardSlotType.ChildSlot;
-                    _card.m_ChildSlot.transform.localPosition = new Vector3(0, -50, 0);
-                }
-                ReAllocation(_card, _cardSlot);
+                if (_card.m_ChildSlot.atAceBase) UpdateToAceBaseType(_card.m_ChildSlot, false);
+                //Relocation(_card, _cardSlot);
+                MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
                 return true;
             }
             else return false;
         }
         else if (CheckChildSlot(_card, _cardSlot))
         {
-            Debug.Log("CHILD SLOT");
-            if (_card.m_ChildSlot.atAceBase)
-            {
-                _card.m_ChildSlot.atAceBase = false;
-                _card.m_ChildSlot.cardSlotType = CardSlotType.ChildSlot;
-                _card.m_ChildSlot.transform.localPosition = new Vector3(0, -50, 0);
-            }
-            ReAllocation(_card, _cardSlot);
+            if (_card.m_ChildSlot.atAceBase) UpdateToAceBaseType(_card.m_ChildSlot, false);
+            //Relocation(_card, _cardSlot);
+            MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
             return true;
         }
         return false;
     }
 
-    public List<RaycastResult> RaycastUI(Vector2 _pos)
+    void UpdateToAceBaseType(CardSlot _cardSlot, bool isAceBase)
+    {
+        _cardSlot.atAceBase = isAceBase;
+        _cardSlot.cardSlotType = isAceBase? CardSlotType.AceBase: CardSlotType.ChildSlot;
+        _cardSlot.transform.localPosition = isAceBase? Vector3.zero : new Vector3(0, -50, 0);
+    }
+    
+    public GameObject RaycastUI(Vector2 _pos)
     {
         List<RaycastResult> results = new List<RaycastResult>();
         m_PointerEventData = new PointerEventData(m_EventSystem);
         m_PointerEventData.position = _pos;
         m_Raycaster.Raycast(m_PointerEventData, results);
-        return results;
+        if (results.Count == 0) return null;
+        else return results[0].gameObject;
     }
-
-    public void SendHoldingCardToOriginalPosition(Card _tmpCard)
-    {
-        _tmpCard.transform.DOMove(holdingCardOriginalSlot.transform.position, 0.2f).SetEase(Ease.Linear).OnComplete(() =>
-        {
-            _tmpCard.m_CardImage.raycastTarget = true;
-        });
-        ReAllocateChildren(_tmpCard, holdingCardOriginalSlot);
-    }
-
+    
     void UpdateCardSlots(bool isOpen)
     {
         for (int i = 0; i < cardSlots.Count; i++)
@@ -182,13 +178,19 @@ public class CardController : MonoBehaviour
             cardSlots[i].raycastTarget = isOpen;
         }
     }
-
-    void ReAllocation(Card _card, CardSlot newCardSlot)
+    
+    public void SendHoldingCardToOriginalPosition(Card _tmpCard)
     {
-        if (_card.m_AllocatedSlot.cardSlotType == CardSlotType.OpenedCardsRightTop)
+        _tmpCard.transform.DOMove(holdingCardOriginalSlot.transform.position, 0.2f).SetEase(Ease.Linear).OnComplete(() =>
         {
-            CardDealer.Instance.RemoveCard(_card);
-        }
+            _tmpCard.m_CardImage.raycastTarget = true;
+        });
+        RelocateChildren(_tmpCard, holdingCardOriginalSlot);
+    }
+
+    void Relocation(Card _card, CardSlot newCardSlot)
+    {
+        if (_card.m_AllocatedSlot.cardSlotType == CardSlotType.OpenedCardsRightTop) CardDealer.Instance.RemoveCard(_card);
         else _card.m_AllocatedSlot.DeAllocatted();
         
         _card.m_AllocatedSlot = newCardSlot;
@@ -202,10 +204,10 @@ public class CardController : MonoBehaviour
         _card.parent = newCardSlot.parentCard;
         if(newCardSlot.parentCard != null) newCardSlot.parentCard.child = _card;
         
-        ReAllocateChildren(_card,newCardSlot);
+        RelocateChildren(_card,newCardSlot);
     }
 
-    void ReAllocateChildren(Card _parent, CardSlot _newParentSlot)
+    void RelocateChildren(Card _parent, CardSlot _newParentSlot)
     {
         Card temporaryCard = _parent.child;
         int i = 1;
@@ -222,6 +224,7 @@ public class CardController : MonoBehaviour
         
     }
 
+    #endregion
 
     #region Slot Checks
 

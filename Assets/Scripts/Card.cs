@@ -74,10 +74,14 @@ public class Card : MonoBehaviour
     {
         m_CardImage.raycastTarget = false;
         m_Animator.SetTrigger("Close");
+        isOpened = false;
     }
-    
+
     public void OpenCard()
     {
         m_Animator.SetTrigger("Open");
+        //DELAY WOULD BE GOOD
+        m_CardImage.raycastTarget = true;
+        isOpened = true;
     }
 }

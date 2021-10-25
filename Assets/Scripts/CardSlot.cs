@@ -27,6 +27,12 @@ public class CardSlot : MonoBehaviour
         CardController.cardSlots.Add(image);
         image.raycastTarget = false;
     }
+    
+    public void RemoveToSlotsList()
+    {
+        CardController.cardSlots.Remove(image);
+        image.raycastTarget = true;
+    }
 
     public void Allocatted(Card _card)
     {
@@ -38,7 +44,7 @@ public class CardSlot : MonoBehaviour
         currentCard = _card;
     }
     
-    public void DeAllocatted()
+    public bool DeAllocatted()
     {
         if (image != null)
         {
@@ -46,9 +52,23 @@ public class CardSlot : MonoBehaviour
             image.raycastTarget = false;
         }
         currentCard = null;
-        if (parentCard != null && !parentCard.isOpened)
-        {
+        if (parentCard != null && !parentCard.isOpened){
             parentCard.OpenCard();
+            return true;
+        }
+        return false;
+    }
+
+    public void UndoDeLocatted(Card _card){
+        if (image != null)
+        {
+            CardController.cardSlots.Remove(image);
+            image.raycastTarget = false;
+        }
+        currentCard = _card;
+        if (parentCard != null && parentCard.isOpened)
+        {
+            parentCard.CloseCard();
         }
     }
     

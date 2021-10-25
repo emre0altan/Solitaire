@@ -186,10 +186,7 @@ public class CardDealer : MonoBehaviour
                 Allocate(openedCardLeft.currentCard,openedCardMiddle);
                 leftSlotStack.Remove(openedCardMiddle.currentCard);
             }
-            else
-            {
-                _card.m_AllocatedSlot.currentCard = null;
-            }
+            else _card.m_AllocatedSlot.currentCard = null;
         }
         else
         {
@@ -201,6 +198,32 @@ public class CardDealer : MonoBehaviour
         untakenCards.Remove(_card);
         _card.m_ChildSlot.AddToSlotsList();
         openIndex--;
+    }
+
+    public void UndoRemoveCard(Card _card){
+        if (openedCardLeft.currentCard == null)
+        {
+            Allocate(_card, openedCardLeft);
+            leftSlotStack.Add(_card);
+        }
+        else if (openedCardMiddle.currentCard == null)
+        {
+            openedCardLeft.currentCard.m_CardImage.raycastTarget = false;
+            Allocate(_card, openedCardMiddle);
+        }
+        else if (openedCardRight.currentCard == null)
+        {
+            openedCardMiddle.currentCard.m_CardImage.raycastTarget = false;
+            Allocate(_card, openedCardRight);
+        }
+        else
+        {
+            openedCardRight.currentCard.m_CardImage.raycastTarget = false;
+            leftSlotStack.Add(openedCardMiddle.currentCard);
+            Allocate(openedCardMiddle.currentCard, openedCardLeft);
+            Allocate(openedCardRight.currentCard, openedCardMiddle);
+            Allocate(_card, openedCardRight);
+        }
     }
 
     void CloseAllOpenedCards()
