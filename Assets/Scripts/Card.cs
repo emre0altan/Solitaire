@@ -7,6 +7,15 @@ using UnityEngine.UI;
 using DG.Tweening;
 using Random = UnityEngine.Random;
 
+[System.Serializable]
+public class ClosedCards{
+    public int openIndex;
+    public bool availableToOpen, closedCardsEnded;
+    public List<Card> untakenCards, leftSlotStack;
+    public CardSlot openedCardLeft, openedCardMiddle, openedCardRight;
+    public Image closedCardsLocation;
+}
+
 public enum CardType
 {
     CLUB,

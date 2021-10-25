@@ -6900,11 +6900,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05b8ad6314234a47badca68cfbf214b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  closedCards:
+    openIndex: 0
+    availableToOpen: 0
+    closedCardsEnded: 0
+    untakenCards: []
+    leftSlotStack: []
+    openedCardLeft: {fileID: 6604432566191168718}
+    openedCardMiddle: {fileID: 314096146}
+    openedCardRight: {fileID: 633102935}
+    closedCardsLocation: {fileID: 120626318}
   coloredGameBG: {fileID: 884424216}
-  closedCardsLocation: {fileID: 120626318}
-  openedCardLeft: {fileID: 6604432566191168718}
-  openedCardMiddle: {fileID: 314096146}
-  openedCardRight: {fileID: 633102935}
   deckSlots:
   - {fileID: 8977468619100154322}
   - {fileID: 3731934997945191032}

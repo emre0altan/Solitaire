@@ -31,7 +31,7 @@ public class CardSlot : MonoBehaviour
     public void RemoveToSlotsList()
     {
         CardController.cardSlots.Remove(image);
-        image.raycastTarget = true;
+        image.raycastTarget = false;
     }
 
     public void Allocatted(Card _card)

@@ -20,22 +20,18 @@ public class CardDealer : MonoBehaviour
         Instance = this;
     }
 
+    public ClosedCards closedCards;
     public RectTransform coloredGameBG;
-    public Image closedCardsLocation;
-    public CardSlot openedCardLeft, openedCardMiddle, openedCardRight;
     public CardSlot[] deckSlots;
     public Card cardPrefab;
     
-
-    private List<Card> untakenCards,leftSlotStack;
-    private int openIndex = 0;
-    private bool closedCardsEnded, availableToOpen = true;
+    
     private float cardOpenTimer = 0;
     
     private void Start()
     {
-        leftSlotStack = new List<Card>();
-        untakenCards = new List<Card>();
+        closedCards.leftSlotStack = new List<Card>();
+        closedCards.untakenCards = new List<Card>();
         SpawnCards();
         DistributeCards();
     }
@@ -45,30 +41,31 @@ public class CardDealer : MonoBehaviour
         if (cardOpenTimer > 0) cardOpenTimer -= Time.deltaTime;
     }
 
-
+    #region Initial
     void SpawnCards()
     {
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 13; j++)
             {
-                Card newCard = Instantiate(cardPrefab, closedCardsLocation.rectTransform.position, closedCardsLocation.rectTransform.rotation, coloredGameBG);
+                Card newCard = Instantiate(cardPrefab, closedCards.closedCardsLocation.rectTransform.position, closedCards.closedCardsLocation.rectTransform.rotation, coloredGameBG);
                 newCard.m_CardType = (CardType) i;
                 newCard.m_CardValue = (CardValue) j;
-                untakenCards.Add(newCard);
+                newCard.gameObject.name = "Card" + (i * 13 + j);
+                closedCards.untakenCards.Add(newCard);
             }
         }
     }
     
     public void DistributeCards()
     {
-        untakenCards.Shuffle();
+        //closedCards.untakenCards.Shuffle();
         StartCoroutine(DisributeRoutine());
     }
 
     IEnumerator DisributeRoutine()
     {
-        availableToOpen = false;
+        closedCards.availableToOpen = false;
         //WaitForSeconds row = new WaitForSeconds(0.07f), column = new WaitForSeconds(0.3f);
         WaitForSeconds row = new WaitForSeconds(0.01f), column = new WaitForSeconds(0.03f);
 
@@ -77,7 +74,7 @@ public class CardDealer : MonoBehaviour
         {
             for (int j = 0; j <= i; j++)
             {
-                Card latest = untakenCards[0];
+                Card latest = closedCards.untakenCards[0];
                 if (j == 0)
                 {
                     latest.m_AllocatedSlot = deckSlots[i];
@@ -104,7 +101,7 @@ public class CardDealer : MonoBehaviour
                             latest.isOpened = true;
                         }
                     });
-                untakenCards.RemoveAt(0);
+                closedCards.untakenCards.RemoveAt(0);
                 previous = latest;
                 yield return row;
             }
@@ -112,63 +109,29 @@ public class CardDealer : MonoBehaviour
             yield return column;
         }
 
-        availableToOpen = true;
+        closedCards.availableToOpen = true;
     }
+    
+
+    #endregion
     
     public void OpenClosedCard()
     {
-        if(!availableToOpen) return;
+        if(!closedCards.availableToOpen) return;
         
-        if (closedCardsEnded)
+        if (closedCards.closedCardsEnded)
         {
-            closedCardsLocation.raycastTarget = false;
-            CloseAllOpenedCards();
+            closedCards.closedCardsLocation.raycastTarget = false;
+            MoveController.Instance.AddCommand(new CloseDeckCommand(closedCards));
         }
         else if(cardOpenTimer <= 0)
         {
-            cardOpenTimer = 0.1f;
-            int tempInd = openIndex++;
-            if (openIndex == untakenCards.Count)
-            {
-                closedCardsLocation.color = new Color(1, 1, 1, 0);
-                closedCardsEnded = true;
-                StartCoroutine(CloseDelay());
-            }
-            
-            untakenCards[tempInd].OpenCard();
-            untakenCards[tempInd].isOpened = true;
-            untakenCards[tempInd].transform.SetAsLastSibling();
-            untakenCards[tempInd].m_CardImage.raycastTarget = true;
-            
-
-            if (openedCardLeft.currentCard == null)
-            {
-                Allocate(untakenCards[tempInd], openedCardLeft);
-                leftSlotStack.Add(untakenCards[tempInd]);
-            }
-            else if (openedCardMiddle.currentCard == null)
-            {
-                openedCardLeft.currentCard.m_CardImage.raycastTarget = false;
-                Allocate(untakenCards[tempInd], openedCardMiddle);
-            }
-            else if (openedCardRight.currentCard == null)
-            {
-                openedCardMiddle.currentCard.m_CardImage.raycastTarget = false;
-                Allocate(untakenCards[tempInd], openedCardRight);
-            }
-            else
-            {
-                openedCardRight.currentCard.m_CardImage.raycastTarget = false;
-                leftSlotStack.Add(openedCardMiddle.currentCard);
-                Allocate(openedCardMiddle.currentCard, openedCardLeft);
-                Allocate(openedCardRight.currentCard, openedCardMiddle);
-                Allocate(untakenCards[tempInd], openedCardRight);
-            }
-
+            cardOpenTimer = 0.3f;
+            MoveController.Instance.AddCommand(new OpenDeckCommand(closedCards));
         }
     }
     
-    void Allocate(Card _card, CardSlot newCardSlot)
+    void Relocate(Card _card, CardSlot newCardSlot)
     {
         _card.transform.DOMove(newCardSlot.transform.position, 1f).SetEase(Ease.OutCubic);
         _card.m_AllocatedSlot = newCardSlot;
@@ -177,102 +140,53 @@ public class CardDealer : MonoBehaviour
 
     public void RemoveCard(Card _card)
     {
-        if (leftSlotStack.Count > 1)
+        if (closedCards.leftSlotStack.Count > 1)
         {
-            if (openedCardRight.currentCard == _card)
+            if (closedCards.openedCardRight.currentCard == _card)
             {
-                openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
-                Allocate(openedCardMiddle.currentCard,openedCardRight);
-                Allocate(openedCardLeft.currentCard,openedCardMiddle);
-                leftSlotStack.Remove(openedCardMiddle.currentCard);
+                closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+                Relocate(closedCards.openedCardMiddle.currentCard,closedCards.openedCardRight);
+                Relocate(closedCards.openedCardLeft.currentCard,closedCards.openedCardMiddle);
+                Relocate(closedCards.leftSlotStack[closedCards.leftSlotStack.Count-2], closedCards.openedCardLeft);
+                closedCards.leftSlotStack.Remove(closedCards.openedCardMiddle.currentCard);
             }
             else _card.m_AllocatedSlot.currentCard = null;
         }
         else
         {
-            if (openedCardMiddle.currentCard == _card) openedCardLeft.currentCard.m_CardImage.raycastTarget = true;
-            else if (openedCardRight.currentCard == _card) openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
-            else leftSlotStack.Remove(_card);
+            if (closedCards.openedCardMiddle.currentCard == _card) closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = true;
+            else if (closedCards.openedCardRight.currentCard == _card) closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+            else closedCards.leftSlotStack.Remove(_card);
             _card.m_AllocatedSlot.currentCard = null;
         }
-        untakenCards.Remove(_card);
+        closedCards.untakenCards.Remove(_card);
         _card.m_ChildSlot.AddToSlotsList();
-        openIndex--;
+        closedCards.openIndex--;
     }
 
     public void UndoRemoveCard(Card _card){
-        if (openedCardLeft.currentCard == null)
+        if (closedCards.openedCardLeft.currentCard == null)
         {
-            Allocate(_card, openedCardLeft);
-            leftSlotStack.Add(_card);
+            closedCards.leftSlotStack.Add(_card);
         }
-        else if (openedCardMiddle.currentCard == null)
+        else if (closedCards.openedCardMiddle.currentCard == null)
         {
-            openedCardLeft.currentCard.m_CardImage.raycastTarget = false;
-            Allocate(_card, openedCardMiddle);
+            closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = false;
         }
-        else if (openedCardRight.currentCard == null)
+        else if (closedCards.openedCardRight.currentCard == null)
         {
-            openedCardMiddle.currentCard.m_CardImage.raycastTarget = false;
-            Allocate(_card, openedCardRight);
+            closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = false;
         }
         else
         {
-            openedCardRight.currentCard.m_CardImage.raycastTarget = false;
-            leftSlotStack.Add(openedCardMiddle.currentCard);
-            Allocate(openedCardMiddle.currentCard, openedCardLeft);
-            Allocate(openedCardRight.currentCard, openedCardMiddle);
-            Allocate(_card, openedCardRight);
+            closedCards.openedCardRight.currentCard.m_CardImage.raycastTarget = false;
+            closedCards.leftSlotStack.Add(closedCards.openedCardMiddle.currentCard);
+            Relocate(closedCards.openedCardMiddle.currentCard, closedCards.openedCardLeft);
+            Relocate(closedCards.openedCardRight.currentCard, closedCards.openedCardMiddle);
         }
+        closedCards.untakenCards.Insert(closedCards.openIndex,_card);
+        _card.m_ChildSlot.RemoveToSlotsList();
+        closedCards.openIndex++;
     }
 
-    void CloseAllOpenedCards()
-    {
-        availableToOpen = false;
-        if (openedCardRight.currentCard != null)
-        {
-            openedCardRight.currentCard.CloseCard();
-            openedCardRight.currentCard.isOpened = false;
-            openedCardRight.currentCard.transform.DOMove(closedCardsLocation.rectTransform.position, 0.5f);
-            openedCardRight.currentCard.m_AllocatedSlot = null;
-            openedCardRight.currentCard = null;
-        }
-
-        if (openedCardMiddle.currentCard != null)
-        {
-            openedCardMiddle.currentCard.CloseCard();
-            openedCardMiddle.currentCard.isOpened = false;
-            openedCardMiddle.currentCard.transform.DOMove(closedCardsLocation.rectTransform.position, 0.5f);
-            openedCardMiddle.currentCard.m_AllocatedSlot = null;
-            openedCardMiddle.currentCard = null;
-        }
-
-        while (leftSlotStack.Count > 0)
-        {
-            Card tmp = leftSlotStack[leftSlotStack.Count-1];
-            leftSlotStack.Remove(tmp);
-            tmp.CloseCard();
-            tmp.isOpened = false;
-            tmp.transform.DOMove(closedCardsLocation.rectTransform.position, 0.5f);
-            tmp.m_AllocatedSlot = null;
-        }
-        openedCardLeft.currentCard = null;
-        openIndex = 0;
-        StartCoroutine(OpenCardsDelay());
-    }
-
-    IEnumerator CloseDelay()
-    {
-        availableToOpen = false;
-        yield return new WaitForSeconds(1f);
-        availableToOpen = true;
-    }
-    
-    IEnumerator OpenCardsDelay()
-    {
-        yield return new WaitForSeconds(1f);
-        closedCardsEnded = false;
-        availableToOpen = true;
-        closedCardsLocation.raycastTarget = true;
-    }
 }

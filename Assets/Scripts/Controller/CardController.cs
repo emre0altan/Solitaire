@@ -187,26 +187,7 @@ public class CardController : MonoBehaviour
         });
         RelocateChildren(_tmpCard, holdingCardOriginalSlot);
     }
-
-    void Relocation(Card _card, CardSlot newCardSlot)
-    {
-        if (_card.m_AllocatedSlot.cardSlotType == CardSlotType.OpenedCardsRightTop) CardDealer.Instance.RemoveCard(_card);
-        else _card.m_AllocatedSlot.DeAllocatted();
-        
-        _card.m_AllocatedSlot = newCardSlot;
-        newCardSlot.Allocatted(_card);
-        _card.transform.DOMove(newCardSlot.transform.position, 0.3f).OnComplete(() =>
-        {
-            _card.m_CardImage.raycastTarget = true;
-        });
-        
-        if (_card.parent != null) _card.parent.child = null;
-        _card.parent = newCardSlot.parentCard;
-        if(newCardSlot.parentCard != null) newCardSlot.parentCard.child = _card;
-        
-        RelocateChildren(_card,newCardSlot);
-    }
-
+    
     void RelocateChildren(Card _parent, CardSlot _newParentSlot)
     {
         Card temporaryCard = _parent.child;
