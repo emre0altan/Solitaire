@@ -59,7 +59,7 @@ public class CardDealer : MonoBehaviour
     
     public void DistributeCards()
     {
-        //closedCards.untakenCards.Shuffle();
+        closedCards.untakenCards.Shuffle();
         StartCoroutine(DisributeRoutine());
     }
 
