@@ -32,6 +32,9 @@ public class MoveCommand : Command{
             card.m_CardImage.raycastTarget = true;
         });
         
+        UpdatePoints(1);
+        
+        ///Children
         Card temporaryCard = card.child;
         int i = 1;
         while (temporaryCard != null && i < 20)
@@ -63,12 +66,14 @@ public class MoveCommand : Command{
         nextSlot.DeAllocatted();
         if (nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = null;
         else if (nextSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, false);
-        card.transform.DOMove(previousSlot.transform.position, 0.3f).OnComplete((() => {
+        card.transform.DOMove(previousSlot.transform.position, 0.2f).OnComplete((() => {
             card.m_CardImage.raycastTarget = true;
         }));
         
         card.transform.SetAsLastSibling();
-
+        UpdatePoints(-1);
+        
+        //Children
         Card temporaryCard = card.child;
         int i = 1;
         while (temporaryCard != null && i < 20)
@@ -95,5 +100,13 @@ public class MoveCommand : Command{
         _cardSlot.cardSlotType = isAceBase? CardSlotType.AceBase: CardSlotType.ChildSlot;
         _cardSlot.transform.localPosition = isAceBase? Vector3.zero : new Vector3(0, -50, 0);
     }
-    
+
+    void UpdatePoints(int k){
+        if(nextSlot.cardSlotType == CardSlotType.AceBase) CardController.Instance.UpdatePoints(10 * k);
+        else if (nextSlot.cardSlotType == CardSlotType.EmptySlot){
+            if(previousSlot.cardSlotType == CardSlotType.AceBase) CardController.Instance.UpdatePoints(-10 * k);
+            else if(previousSlot.cardSlotType != CardSlotType.EmptySlot) CardController.Instance.UpdatePoints(5 * k);
+        }
+        else if(nextSlot.cardSlotType == CardSlotType.ChildSlot) CardController.Instance.UpdatePoints(5 * k);
+    }
 }

@@ -3,14 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 public class MoveController : MonoBehaviour
 {
     public static MoveController Instance;
-    public List<Command> commands;
-    public List<String> commandStrings;
-
+    
     private void Awake()
     {
         if (Instance != null)
@@ -24,7 +23,12 @@ public class MoveController : MonoBehaviour
         commandStrings = new List<string>();
     }
 
+    public List<Command> commands;
+    public List<String> commandStrings;
     public int currentCommand = -1;
+    public Text moveValue;
+
+    private int totalMoves = 0;
 
     public void AddCommand(Command newCommand){
         newCommand.Execute();
@@ -38,12 +42,18 @@ public class MoveController : MonoBehaviour
             commandStrings.Add(newCommand.myToString());
             currentCommand++;
         }
+
+        totalMoves++;
+        moveValue.text = totalMoves.ToString();
     }
 
     public void UndoCommand(){
         if(currentCommand < 0) return; 
         commands[currentCommand].Undo();
         currentCommand--;
+        
+        totalMoves++;
+        moveValue.text = totalMoves.ToString();
     }
 
 }

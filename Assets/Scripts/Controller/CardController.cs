@@ -6,11 +6,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class CardController : MonoBehaviour
-{
+public class CardController : MonoBehaviour{
+    public static List<Card> allCards;
     public static List<Image> cardSlots;
     public static CardController Instance;
-
+    public static int points = 0;
     private void Awake()
     {
         if (Instance != null)
@@ -22,6 +22,7 @@ public class CardController : MonoBehaviour
         Instance = this;
     }
     
+    [SerializeField] public Text pointsText;
     [SerializeField] Card holdingCard;
     [SerializeField] GraphicRaycaster m_Raycaster;
     [SerializeField] EventSystem m_EventSystem;
@@ -30,9 +31,10 @@ public class CardController : MonoBehaviour
     private CardSlot holdingCardOriginalSlot;
 
     private Card tempChildCard;
+    
 
-    private void Start()
-    {
+    private void Start(){
+        allCards = new List<Card>();
         TouchManager.Instance.onTouchBegan += OnDown;
         TouchManager.Instance.onTouchMoved += OnMove;
         TouchManager.Instance.onTouchEnded += OnUp;
@@ -73,7 +75,8 @@ public class CardController : MonoBehaviour
             if (result != null && result.CompareTag("CardSlot"))
             {
                 CardSlot _cardSlot = result.GetComponent<CardSlot>();
-                if (!TryToPutCard(tmpCard, _cardSlot)) SendHoldingCardToOriginalPosition(tmpCard);
+                if (TryToPutCard(tmpCard, _cardSlot)) CheckGameCompleted();
+                else SendHoldingCardToOriginalPosition(tmpCard);
             }
             else
                 SendHoldingCardToOriginalPosition(tmpCard);
@@ -84,6 +87,30 @@ public class CardController : MonoBehaviour
     }
 
     #endregion
+
+    public void UpdatePoints(int point){
+        points += point;
+        pointsText.text = points.ToString();
+    }
+
+    void CheckGameCompleted(){
+        bool isCompleted, oneCardIgnored = false;
+        for (int i = 0; i < allCards.Count; i++){
+            if (!allCards[i].isOpened || allCards[i].m_AllocatedSlot.cardSlotType == CardSlotType.OpenedCardsRightTop){
+                isCompleted = false;
+                break;
+            };
+
+            if (allCards[i].m_CardValue != CardValue.King &&
+                allCards[i].m_AllocatedSlot.cardSlotType == CardSlotType.EmptySlot){
+                if (oneCardIgnored){
+                    isCompleted = false;
+                    break;
+                }
+                else oneCardIgnored = true;
+            }
+        }
+    }
     
     #region Card Movements
 
@@ -124,8 +151,7 @@ public class CardController : MonoBehaviour
     {
         if (_cardSlot.cardSlotType == CardSlotType.AceBase)
         {
-            if (CheckAceBase(_card, _cardSlot))
-            {
+            if (CheckAceBase(_card, _cardSlot)){
                 MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
                 return true;
             }

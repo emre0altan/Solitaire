@@ -53,6 +53,7 @@ public class CardDealer : MonoBehaviour
                 newCard.m_CardValue = (CardValue) j;
                 newCard.gameObject.name = "Card" + (i * 13 + j);
                 closedCards.untakenCards.Add(newCard);
+                CardController.allCards.Add(newCard);
             }
         }
     }
@@ -123,12 +124,29 @@ public class CardDealer : MonoBehaviour
         {
             closedCards.closedCardsLocation.raycastTarget = false;
             MoveController.Instance.AddCommand(new CloseDeckCommand(closedCards));
+            CardController.points -= 100;
+            if (CardController.points < 0) CardController.points = 0;
+            CardController.Instance.pointsText.text = CardController.points.ToString();
         }
         else if(cardOpenTimer <= 0)
         {
-            cardOpenTimer = 0.3f;
-            MoveController.Instance.AddCommand(new OpenDeckCommand(closedCards));
+            if (PlayerPrefs.GetInt("Draw3", 0) == 1){
+                cardOpenTimer = 0.5f;
+                StartCoroutine(Draw3Delay());
+            }
+            else{
+                cardOpenTimer = 0.3f;
+                MoveController.Instance.AddCommand(new OpenDeckCommand(closedCards));
+            }
         }
+    }
+
+    IEnumerator Draw3Delay(){
+        MoveController.Instance.AddCommand(new OpenDeckCommand(closedCards));
+        yield return new WaitForSeconds(0.1f);
+        if(!closedCards.closedCardsEnded) MoveController.Instance.AddCommand(new OpenDeckCommand(closedCards));
+        yield return new WaitForSeconds(0.1f);
+        if(!closedCards.closedCardsEnded) MoveController.Instance.AddCommand(new OpenDeckCommand(closedCards));
     }
     
     void Relocate(Card _card, CardSlot newCardSlot)
