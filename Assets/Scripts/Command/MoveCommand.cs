@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-[System.Serializable]
 public class MoveCommand : Command{
     private Card card;
     private CardSlot previousSlot, nextSlot;
@@ -19,11 +18,15 @@ public class MoveCommand : Command{
         if (previousSlot.cardSlotType == CardSlotType.OpenedCardsRightTop) CardDealer.Instance.RemoveCard(card);
         else parentCardOpened = previousSlot.DeAllocatted();
         
+        if (card.m_ChildSlot.atAceBase) UpdateToAceBaseType(card.m_ChildSlot, false);
+        
         if (card.parent != null) card.parent.child = null;
         card.parent = nextSlot.parentCard;
         card.m_AllocatedSlot = nextSlot;
-        if(nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = card;
         nextSlot.Allocatted(card);
+        if(nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = card;
+        else if(nextSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, true);
+        
         card.transform.DOMove(nextSlot.transform.position, 0.2f).OnComplete(() =>
         {
             card.m_CardImage.raycastTarget = true;
@@ -52,12 +55,14 @@ public class MoveCommand : Command{
             if(parentCardOpened) previousSlot.UndoDeLocatted(card);
             else previousSlot.DeAllocatted();
         }
+        if (previousSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, true);
 
         if (previousSlot.cardSlotType == CardSlotType.ChildSlot) previousSlot.parentCard.child = card;
         card.parent = previousSlot.parentCard;
         card.m_AllocatedSlot = previousSlot;
-        if (nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = null;
         nextSlot.DeAllocatted();
+        if (nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = null;
+        else if (nextSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, false);
         card.transform.DOMove(previousSlot.transform.position, 0.3f).OnComplete((() => {
             card.m_CardImage.raycastTarget = true;
         }));
@@ -78,4 +83,17 @@ public class MoveCommand : Command{
             i++;
         }
     }
+
+    public override string myToString(){
+        return "MC-" + card.gameObject.name + "_FROM-" + previousSlot.gameObject.name + "_TO-" +
+               nextSlot.gameObject.name;
+    }
+    
+    void UpdateToAceBaseType(CardSlot _cardSlot, bool isAceBase)
+    {
+        _cardSlot.atAceBase = isAceBase;
+        _cardSlot.cardSlotType = isAceBase? CardSlotType.AceBase: CardSlotType.ChildSlot;
+        _cardSlot.transform.localPosition = isAceBase? Vector3.zero : new Vector3(0, -50, 0);
+    }
+    
 }

@@ -126,9 +126,7 @@ public class CardController : MonoBehaviour
         {
             if (CheckAceBase(_card, _cardSlot))
             {
-                //Relocation(_card, _cardSlot);
                 MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
-                UpdateToAceBaseType(_card.m_ChildSlot, true);
                 return true;
             }
             else return false;
@@ -137,8 +135,6 @@ public class CardController : MonoBehaviour
         {
             if (CheckEmptySlot(_card, _cardSlot))
             {
-                if (_card.m_ChildSlot.atAceBase) UpdateToAceBaseType(_card.m_ChildSlot, false);
-                //Relocation(_card, _cardSlot);
                 MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
                 return true;
             }
@@ -146,21 +142,12 @@ public class CardController : MonoBehaviour
         }
         else if (CheckChildSlot(_card, _cardSlot))
         {
-            if (_card.m_ChildSlot.atAceBase) UpdateToAceBaseType(_card.m_ChildSlot, false);
-            //Relocation(_card, _cardSlot);
             MoveController.Instance.AddCommand(new MoveCommand(_card,_cardSlot));
             return true;
         }
         return false;
     }
 
-    void UpdateToAceBaseType(CardSlot _cardSlot, bool isAceBase)
-    {
-        _cardSlot.atAceBase = isAceBase;
-        _cardSlot.cardSlotType = isAceBase? CardSlotType.AceBase: CardSlotType.ChildSlot;
-        _cardSlot.transform.localPosition = isAceBase? Vector3.zero : new Vector3(0, -50, 0);
-    }
-    
     public GameObject RaycastUI(Vector2 _pos)
     {
         List<RaycastResult> results = new List<RaycastResult>();

@@ -1,16 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
 
-
-
-
 public class MoveController : MonoBehaviour
 {
     public static MoveController Instance;
     public List<Command> commands;
+    public List<String> commandStrings;
 
     private void Awake()
     {
@@ -22,6 +21,7 @@ public class MoveController : MonoBehaviour
 
         Instance = this;
         commands = new List<Command>();
+        commandStrings = new List<string>();
     }
 
     public int currentCommand = -1;
@@ -31,9 +31,11 @@ public class MoveController : MonoBehaviour
         if (currentCommand != commands.Count - 1){
             currentCommand++;
             commands[currentCommand] = newCommand;
+            commandStrings[currentCommand] = newCommand.myToString();
         }
         else{
             commands.Add(newCommand);
+            commandStrings.Add(newCommand.myToString());
             currentCommand++;
         }
     }

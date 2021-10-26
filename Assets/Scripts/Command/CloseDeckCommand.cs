@@ -82,6 +82,10 @@ public class CloseDeckCommand : Command{
         closedCards.closedCardsLocation.StartCoroutine(UndoOpenCardsDelay());
     }
     
+    public override string myToString(){
+        return "CLOSE DECK";
+    }
+    
     IEnumerator OpenCardsDelay()
     {
         yield return new WaitForSeconds(1f);

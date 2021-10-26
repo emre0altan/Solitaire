@@ -72,13 +72,22 @@ public class OpenDeckCommand : Command{
         else if (tempCard.m_AllocatedSlot == closedCards.openedCardMiddle){
             closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = true;
         }
-        else if (tempCard.m_AllocatedSlot == closedCards.openedCardRight && closedCards.leftSlotStack.Count > 1){
-            Relocate(closedCards.openedCardMiddle.currentCard,closedCards.openedCardRight);
-            Relocate(closedCards.openedCardLeft.currentCard,closedCards.openedCardMiddle);
-            Relocate(closedCards.leftSlotStack[closedCards.leftSlotStack.Count-2], closedCards.openedCardLeft);
-            closedCards.leftSlotStack.Remove(closedCards.openedCardMiddle.currentCard);
-            closedCards.openedCardRight.currentCard.m_CardImage.raycastTarget = true;
+        else if (tempCard.m_AllocatedSlot == closedCards.openedCardRight){
+            if (closedCards.leftSlotStack.Count > 1){
+                Relocate(closedCards.openedCardMiddle.currentCard,closedCards.openedCardRight);
+                Relocate(closedCards.openedCardLeft.currentCard,closedCards.openedCardMiddle);
+                Relocate(closedCards.leftSlotStack[closedCards.leftSlotStack.Count-2], closedCards.openedCardLeft);
+                closedCards.leftSlotStack.Remove(closedCards.openedCardMiddle.currentCard);
+                closedCards.openedCardRight.currentCard.m_CardImage.raycastTarget = true;
+            }
+            else{
+                closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+            }
         }
+    }
+    
+    public override string myToString(){
+        return "OPEN DECK";
     }
     
     void Relocate(Card _card, CardSlot newCardSlot)
