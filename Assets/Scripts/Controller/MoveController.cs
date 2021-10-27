@@ -28,7 +28,7 @@ public class MoveController : MonoBehaviour
     public int currentCommand = -1;
     public Text moveValue;
 
-    private int totalMoves = 0;
+    public int totalMoves = 0;
 
     public void AddCommand(Command newCommand){
         newCommand.Execute();

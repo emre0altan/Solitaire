@@ -39,8 +39,6 @@ public class CardDealer : MonoBehaviour
     private void Update()
     {
         if (cardOpenTimer > 0) cardOpenTimer -= Time.deltaTime;
-
-        
     }
 
     #region Initial
@@ -53,16 +51,30 @@ public class CardDealer : MonoBehaviour
                 Card newCard = Instantiate(cardPrefab, closedCards.closedCardsLocation.rectTransform.position, closedCards.closedCardsLocation.rectTransform.rotation, coloredGameBG);
                 newCard.m_CardType = (CardType) i;
                 newCard.m_CardValue = (CardValue) j;
-                newCard.gameObject.name = "Card" + (i * 13 + j);
+                newCard.gameObject.name = (i * 13 + j).ToString();
                 closedCards.untakenCards.Add(newCard);
                 CardController.Instance.allCards.Add(newCard);
             }
         }
     }
-    
+
+    private List<Card> tempCards;
+    private List<int> order;
     public void DistributeCards()
     {
-        closedCards.untakenCards.Shuffle();
+        if (PlayerPrefs.GetInt("Restart", 0) == 1){
+            tempCards = new List<Card>();
+            order = GameManager.Instance.latestDeckOrder;
+            for (int i = 0; i < closedCards.untakenCards.Count; i++){
+                tempCards.Add(closedCards.untakenCards[order[i]]);
+            }
+            closedCards.untakenCards = tempCards;
+            PlayerPrefs.SetInt("Restart",0);
+        }
+        else{
+            closedCards.untakenCards.Shuffle();
+            GameManager.Instance.SaveOrder(closedCards.untakenCards);
+        }
         StartCoroutine(DisributeRoutine());
     }
 
