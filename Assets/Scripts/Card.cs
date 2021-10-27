@@ -84,6 +84,7 @@ public class Card : MonoBehaviour
         m_CardImage.raycastTarget = false;
         m_Animator.SetTrigger("Close");
         isOpened = false;
+        m_ChildSlot.transform.localPosition = new Vector3(0, -39, 0);
     }
 
     public void OpenCard()
@@ -92,5 +93,6 @@ public class Card : MonoBehaviour
         //DELAY WOULD BE GOOD
         m_CardImage.raycastTarget = true;
         isOpened = true;
+        m_ChildSlot.transform.localPosition = new Vector3(0, -69, 0);
     }
 }
