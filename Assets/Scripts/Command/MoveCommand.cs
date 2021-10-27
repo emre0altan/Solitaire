@@ -19,13 +19,24 @@ public class MoveCommand : Command{
         else parentCardOpened = previousSlot.DeAllocatted();
         
         if (card.m_ChildSlot.atAceBase) UpdateToAceBaseType(card.m_ChildSlot, false);
-        
-        if (card.parent != null) card.parent.child = null;
+
+        if (card.parent != null){
+            card.parent.child = null;
+            Helper.Instance.holdableCards.Add(card.parent);
+        }
         card.parent = nextSlot.parentCard;
         card.m_AllocatedSlot = nextSlot;
         nextSlot.Allocatted(card);
-        if(nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = card;
-        else if(nextSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, true);
+        if (nextSlot.cardSlotType == CardSlotType.ChildSlot){
+            nextSlot.parentCard.child = card;
+        }
+        else if (nextSlot.cardSlotType == CardSlotType.AceBase){
+            UpdateToAceBaseType(card.m_ChildSlot, true);
+            if (card.m_CardType == CardType.HEART) CardController.Instance.latestHeartAceBase = card;
+            else if (card.m_CardType == CardType.DIAMOND) CardController.Instance.latestDiamondAceBase = card;
+            else if (card.m_CardType == CardType.CLUB) CardController.Instance.latestClubAceBase = card;
+            else if (card.m_CardType == CardType.SPADE) CardController.Instance.latestSpadeAceBase = card;
+        }
         
         card.transform.DOMove(nextSlot.transform.position, 0.2f).OnComplete(() =>
         {
@@ -56,16 +67,27 @@ public class MoveCommand : Command{
         }
         else{
             if(parentCardOpened) previousSlot.UndoDeLocatted(card);
-            else previousSlot.DeAllocatted();
+            else previousSlot.Allocatted(card);
         }
         if (previousSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, true);
 
-        if (previousSlot.cardSlotType == CardSlotType.ChildSlot) previousSlot.parentCard.child = card;
+        if (previousSlot.cardSlotType == CardSlotType.ChildSlot){
+            previousSlot.parentCard.child = card;
+            Helper.Instance.holdableCards.Remove(previousSlot.parentCard);
+        }
         card.parent = previousSlot.parentCard;
         card.m_AllocatedSlot = previousSlot;
         nextSlot.DeAllocatted();
-        if (nextSlot.cardSlotType == CardSlotType.ChildSlot) nextSlot.parentCard.child = null;
-        else if (nextSlot.cardSlotType == CardSlotType.AceBase) UpdateToAceBaseType(card.m_ChildSlot, false);
+        if (nextSlot.cardSlotType == CardSlotType.ChildSlot){
+            nextSlot.parentCard.child = null;
+        }
+        else if (nextSlot.cardSlotType == CardSlotType.AceBase){
+            UpdateToAceBaseType(card.m_ChildSlot, false);
+            if (card.m_CardType == CardType.HEART) CardController.Instance.latestHeartAceBase = nextSlot.parentCard;
+            else if (card.m_CardType == CardType.DIAMOND) CardController.Instance.latestDiamondAceBase = nextSlot.parentCard;
+            else if (card.m_CardType == CardType.CLUB) CardController.Instance.latestClubAceBase = nextSlot.parentCard;
+            else if (card.m_CardType == CardType.SPADE) CardController.Instance.latestSpadeAceBase = nextSlot.parentCard;
+        }
         card.transform.DOMove(previousSlot.transform.position, 0.2f).OnComplete((() => {
             card.m_CardImage.raycastTarget = true;
         }));

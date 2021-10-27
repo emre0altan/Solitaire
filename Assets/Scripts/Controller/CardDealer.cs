@@ -39,6 +39,8 @@ public class CardDealer : MonoBehaviour
     private void Update()
     {
         if (cardOpenTimer > 0) cardOpenTimer -= Time.deltaTime;
+
+        
     }
 
     #region Initial
@@ -53,7 +55,7 @@ public class CardDealer : MonoBehaviour
                 newCard.m_CardValue = (CardValue) j;
                 newCard.gameObject.name = "Card" + (i * 13 + j);
                 closedCards.untakenCards.Add(newCard);
-                CardController.allCards.Add(newCard);
+                CardController.Instance.allCards.Add(newCard);
             }
         }
     }
@@ -79,11 +81,13 @@ public class CardDealer : MonoBehaviour
                 if (j == 0)
                 {
                     latest.m_AllocatedSlot = deckSlots[i];
+                    deckSlots[i].Allocatted(latest);
                     deckSlots[i].currentCard = latest;
                 }
                 else
                 {
                     latest.m_AllocatedSlot = previous.m_ChildSlot;
+                    previous.m_ChildSlot.Allocatted(latest);
                     latest.parent = previous;
                     previous.m_ChildSlot.currentCard = latest;
                     previous.child = latest;
@@ -100,6 +104,7 @@ public class CardDealer : MonoBehaviour
                         {
                             latest.OpenCard();
                             latest.isOpened = true;
+                            Helper.Instance.holdableCards.Add(latest);
                         }
                     });
                 closedCards.untakenCards.RemoveAt(0);
@@ -160,20 +165,23 @@ public class CardDealer : MonoBehaviour
     {
         if (closedCards.leftSlotStack.Count > 1)
         {
-            if (closedCards.openedCardRight.currentCard == _card)
-            {
-                closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
-                Relocate(closedCards.openedCardMiddle.currentCard,closedCards.openedCardRight);
-                Relocate(closedCards.openedCardLeft.currentCard,closedCards.openedCardMiddle);
-                Relocate(closedCards.leftSlotStack[closedCards.leftSlotStack.Count-2], closedCards.openedCardLeft);
-                closedCards.leftSlotStack.Remove(closedCards.openedCardMiddle.currentCard);
-            }
-            else _card.m_AllocatedSlot.currentCard = null;
+            closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+            Relocate(closedCards.openedCardMiddle.currentCard,closedCards.openedCardRight);
+            Relocate(closedCards.openedCardLeft.currentCard,closedCards.openedCardMiddle);
+            Relocate(closedCards.leftSlotStack[closedCards.leftSlotStack.Count-2], closedCards.openedCardLeft);
+            closedCards.leftSlotStack.Remove(closedCards.openedCardMiddle.currentCard);
+            Helper.Instance.holdableCards.Add(closedCards.openedCardRight.currentCard);
         }
         else
         {
-            if (closedCards.openedCardMiddle.currentCard == _card) closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = true;
-            else if (closedCards.openedCardRight.currentCard == _card) closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+            if (closedCards.openedCardMiddle.currentCard == _card){
+                closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = true;
+                Helper.Instance.holdableCards.Add(closedCards.openedCardLeft.currentCard);
+            }
+            else if (closedCards.openedCardRight.currentCard == _card){
+                closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+                Helper.Instance.holdableCards.Add(closedCards.openedCardMiddle.currentCard);
+            }
             else closedCards.leftSlotStack.Remove(_card);
             _card.m_AllocatedSlot.currentCard = null;
         }
@@ -183,6 +191,7 @@ public class CardDealer : MonoBehaviour
     }
 
     public void UndoRemoveCard(Card _card){
+        
         if (closedCards.openedCardLeft.currentCard == null)
         {
             closedCards.leftSlotStack.Add(_card);
@@ -190,13 +199,16 @@ public class CardDealer : MonoBehaviour
         else if (closedCards.openedCardMiddle.currentCard == null)
         {
             closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = false;
+            Helper.Instance.holdableCards.Remove(closedCards.openedCardLeft.currentCard);
         }
         else if (closedCards.openedCardRight.currentCard == null)
         {
             closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = false;
+            Helper.Instance.holdableCards.Remove(closedCards.openedCardMiddle.currentCard);
         }
         else
         {
+            Helper.Instance.holdableCards.Remove(closedCards.openedCardRight.currentCard);
             closedCards.openedCardRight.currentCard.m_CardImage.raycastTarget = false;
             closedCards.leftSlotStack.Add(closedCards.openedCardMiddle.currentCard);
             Relocate(closedCards.openedCardMiddle.currentCard, closedCards.openedCardLeft);

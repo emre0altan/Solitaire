@@ -7,8 +7,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 public class CardController : MonoBehaviour{
-    public static List<Card> allCards;
-    public static List<Image> cardSlots;
+    public List<Card> allCards;
+    public List<CardSlot> cardSlots;
     public static CardController Instance;
     public static int points = 0;
     private void Awake()
@@ -31,6 +31,8 @@ public class CardController : MonoBehaviour{
     private CardSlot holdingCardOriginalSlot;
 
     private Card tempChildCard;
+    public Card latestHeartAceBase, latestDiamondAceBase, latestClubAceBase, latestSpadeAceBase;
+    public CardSlot latestHeartAceBaseSlot, latestDiamondAceBaseSlot, latestClubAceBaseSlot, latestSpadeAceBaseSlot;
     
 
     private void Start(){
@@ -38,6 +40,12 @@ public class CardController : MonoBehaviour{
         TouchManager.Instance.onTouchBegan += OnDown;
         TouchManager.Instance.onTouchMoved += OnMove;
         TouchManager.Instance.onTouchEnded += OnUp;
+    }
+
+    private void Update(){
+        if (Input.GetKeyDown(KeyCode.T)){
+            StartCoroutine(CompletedCollectRoutine(0));
+        }
     }
 
     #region Callbacks
@@ -81,7 +89,6 @@ public class CardController : MonoBehaviour{
             else
                 SendHoldingCardToOriginalPosition(tmpCard);
 
-            tmpCard.selectionBorder.SetActive(false);
         }
         UpdateCardSlots(false);
     }
@@ -93,14 +100,20 @@ public class CardController : MonoBehaviour{
         pointsText.text = points.ToString();
     }
 
+    #region Complete
+
+    
+
+    
     void CheckGameCompleted(){
-        bool isCompleted, oneCardIgnored = false;
+        bool isCompleted = true, oneCardIgnored = false;
+        int atAceBaseCount = 0;
         for (int i = 0; i < allCards.Count; i++){
             if (!allCards[i].isOpened || allCards[i].m_AllocatedSlot.cardSlotType == CardSlotType.OpenedCardsRightTop){
                 isCompleted = false;
                 break;
             };
-
+            
             if (allCards[i].m_CardValue != CardValue.King &&
                 allCards[i].m_AllocatedSlot.cardSlotType == CardSlotType.EmptySlot){
                 if (oneCardIgnored){
@@ -109,8 +122,103 @@ public class CardController : MonoBehaviour{
                 }
                 else oneCardIgnored = true;
             }
+            
+            if (allCards[i].m_AllocatedSlot.cardSlotType == CardSlotType.AceBase) atAceBaseCount++;
         }
+
+        if(isCompleted) StartCoroutine(CompletedCollectRoutine(atAceBaseCount));
     }
+
+    IEnumerator CompletedCollectRoutine(int atAceBaseCount){
+        //for (int i = 0; i < allCards.Count - atAceBaseCount; i++){
+            if (TryTakeForHeart()) ;
+            else if (TryTakeForDiamond()) ;
+            else if (TryTakeForClub()) ;
+            else if (TryTakeForSpade()) ;
+            yield return new WaitForSeconds(1f);
+        //}
+    }
+
+    bool TryTakeForHeart(){ 
+        Debug.Log("CHECKING HEART");
+        if (latestHeartAceBase == null){
+            if (allCards[26].child == null){
+                CompleteMove(allCards[26],latestHeartAceBaseSlot);
+                latestHeartAceBase = allCards[26];
+                Debug.Log("CHECKING HEART - NO CARD TAKING ACE");
+                return true;
+            }
+        }
+        else if (allCards[26 + (int) latestHeartAceBase.m_CardValue + 1].child == null){
+                CompleteMove(allCards[26 + (int) latestHeartAceBase.m_CardValue + 1],latestHeartAceBaseSlot);
+                latestHeartAceBase = allCards[26 + (int) latestHeartAceBase.m_CardValue + 1];
+                Debug.Log("CHECKING HEART - TAKING CARD");
+                return true;
+        }
+        return false;
+    }
+    
+    bool TryTakeForDiamond(){
+        Debug.Log("CHECKING DIAMOND");
+        if (latestDiamondAceBase == null){
+            if ( allCards[13].child == null){
+                CompleteMove(allCards[13],latestDiamondAceBaseSlot);
+                latestDiamondAceBase = allCards[13];
+                return true;
+            }
+        }
+        else if (allCards[13 + (int) latestDiamondAceBase.m_CardValue + 1].child == null){
+            CompleteMove(allCards[13 + (int) latestDiamondAceBase.m_CardValue + 1],latestDiamondAceBaseSlot);
+            latestDiamondAceBase = allCards[13 + (int) latestDiamondAceBase.m_CardValue + 1];
+            return true;
+        }
+        return false;
+    }
+    
+    bool TryTakeForClub(){
+        Debug.Log("CHECKING CLUB");
+
+        if (latestClubAceBase == null){
+            if (allCards[0].child == null){
+                CompleteMove(allCards[0],latestClubAceBaseSlot);
+                latestClubAceBase = allCards[0];
+                return true;
+            }
+        }
+        else if (allCards[0 + (int) latestClubAceBase.m_CardValue + 1].child == null){
+            CompleteMove(allCards[0 + (int) latestClubAceBase.m_CardValue + 1],latestClubAceBaseSlot);
+            latestClubAceBase = allCards[0 + (int) latestClubAceBase.m_CardValue + 1];
+            return true;
+        }
+        return false;
+    }
+    
+    bool TryTakeForSpade(){
+        Debug.Log("CHECKING SPADE");
+
+        if (latestSpadeAceBase == null){
+            if (allCards[39].child == null){
+                CompleteMove(allCards[39],latestSpadeAceBaseSlot);
+                latestSpadeAceBase = allCards[39];
+                return true;
+            }
+        }
+        else if (allCards[39 + (int) latestSpadeAceBase.m_CardValue + 1].child == null){
+            CompleteMove(allCards[39 + (int) latestSpadeAceBase.m_CardValue + 1],latestSpadeAceBaseSlot);
+            latestSpadeAceBase = allCards[39 + (int) latestSpadeAceBase.m_CardValue + 1];
+            return true;
+        }
+        return false;
+    }
+
+    void CompleteMove(Card _card, CardSlot _cardSlot){
+        _card.transform.DOMove(_cardSlot.transform.position, 0.1f).SetEase(Ease.OutCubic);
+        _card.m_AllocatedSlot = _cardSlot;
+        _cardSlot.currentCard = _card;
+        _card.transform.SetAsLastSibling();
+    }
+    
+    #endregion
     
     #region Card Movements
 
@@ -143,7 +251,6 @@ public class CardController : MonoBehaviour{
         holdingCardOriginalSlot = holdingCard.m_AllocatedSlot;
         holdingCard.m_CardImage.raycastTarget = false;
         holdingCard.m_ChildSlot.image.raycastTarget = false;
-        holdingCard.selectionBorder.SetActive(true);
         if(holdingCard.m_AllocatedSlot.image != null) holdingCard.m_AllocatedSlot.image.raycastTarget = false;
     }
 
@@ -188,7 +295,8 @@ public class CardController : MonoBehaviour{
     {
         for (int i = 0; i < cardSlots.Count; i++)
         {
-            cardSlots[i].raycastTarget = isOpen;
+            cardSlots[i].image.raycastTarget = isOpen;
+            cardSlots[i].GetComponent<CardSlot>().availableImage.SetActive(isOpen);
         }
     }
     
@@ -222,9 +330,9 @@ public class CardController : MonoBehaviour{
 
     #region Slot Checks
 
-    bool CheckAceBase(Card _card, CardSlot _cardSlot)
-    {
-
+    public static bool CheckAceBase(Card _card, CardSlot _cardSlot){
+        if (_card.child != null) return false;
+        
         if (_cardSlot.parentCard != null)
         {
             Debug.Log("A-"+(_cardSlot.parentCard.m_CardValue == _card.m_CardValue - 1));
@@ -234,12 +342,12 @@ public class CardController : MonoBehaviour{
             return _card.m_CardValue == CardValue.Ace && _card.m_CardType == _cardSlot.cardType;
     }
     
-    bool CheckEmptySlot(Card _card, CardSlot _cardSlot)
+    public static bool CheckEmptySlot(Card _card, CardSlot _cardSlot)
     {
         return _card.m_CardValue == CardValue.King;
     }
 
-    bool CheckChildSlot(Card _card, CardSlot _cardSlot)
+    public static bool CheckChildSlot(Card _card, CardSlot _cardSlot)
     {
         bool canGo = (((_card.m_CardType == CardType.CLUB || _card.m_CardType == CardType.SPADE) &&
                       (_cardSlot.parentCard.m_CardType == CardType.HEART ||

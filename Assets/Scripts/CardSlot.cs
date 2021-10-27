@@ -13,9 +13,10 @@ public class CardSlot : MonoBehaviour
     public Card parentCard, currentCard;
     public bool atAceBase = false;
     public Image image;
-    private void Awake()
+    public GameObject availableImage;
+    private void Start()
     {
-        if (CardController.cardSlots == null) CardController.cardSlots = new List<Image>();
+        if (CardController.Instance.cardSlots == null) CardController.Instance.cardSlots = new List<CardSlot>();
         if (image != null && cardSlotType != CardSlotType.ChildSlot)
         {
             AddToSlotsList();
@@ -24,13 +25,14 @@ public class CardSlot : MonoBehaviour
 
     public void AddToSlotsList()
     {
-        CardController.cardSlots.Add(image);
+        CardController.Instance.cardSlots.Add(this);
         image.raycastTarget = false;
     }
     
     public void RemoveToSlotsList()
     {
-        CardController.cardSlots.Remove(image);
+        CardController.Instance.cardSlots.Remove(this);
+        availableImage.SetActive(false);
         image.raycastTarget = false;
     }
 
@@ -38,7 +40,8 @@ public class CardSlot : MonoBehaviour
     {
         if (image != null)
         {
-            CardController.cardSlots.Remove(image);
+            CardController.Instance.cardSlots.Remove(this);
+            availableImage.SetActive(false);
             image.raycastTarget = false;
         }
         currentCard = _card;
@@ -48,7 +51,7 @@ public class CardSlot : MonoBehaviour
     {
         if (image != null)
         {
-            CardController.cardSlots.Add(image);
+            CardController.Instance.cardSlots.Add(this);
             image.raycastTarget = false;
         }
         currentCard = null;
@@ -62,7 +65,7 @@ public class CardSlot : MonoBehaviour
     public void UndoDeLocatted(Card _card){
         if (image != null)
         {
-            CardController.cardSlots.Remove(image);
+            CardController.Instance.cardSlots.Remove(this);
             image.raycastTarget = false;
         }
         currentCard = _card;

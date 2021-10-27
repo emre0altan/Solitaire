@@ -19,35 +19,39 @@ public class OpenDeckCommand : Command{
             closedCards.closedCardsLocation.color = new Color(1, 1, 1, 0);
             closedCards.closedCardsLocation.StartCoroutine(CloseDelay());
         }
-        
-        closedCards.untakenCards[tempInd].OpenCard();
-        closedCards.untakenCards[tempInd].isOpened = true;
-        closedCards.untakenCards[tempInd].transform.SetAsLastSibling();
-        closedCards.untakenCards[tempInd].m_CardImage.raycastTarget = true;
+        Card temp = closedCards.untakenCards[tempInd];
+        temp.OpenCard();
+        temp.isOpened = true;
+        temp.transform.SetAsLastSibling();
+        temp.m_CardImage.raycastTarget = true;
+        Helper.Instance.holdableCards.Add(temp);
         
 
         if (closedCards.openedCardLeft.currentCard == null)
         {
-            Relocate(closedCards.untakenCards[tempInd], closedCards.openedCardLeft);
-            closedCards.leftSlotStack.Add(closedCards.untakenCards[tempInd]);
+            Relocate(temp, closedCards.openedCardLeft);
+            closedCards.leftSlotStack.Add(temp);
         }
         else if (closedCards.openedCardMiddle.currentCard == null)
         {
+            Helper.Instance.holdableCards.Remove(closedCards.openedCardLeft.currentCard);
             closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = false;
-            Relocate(closedCards.untakenCards[tempInd], closedCards.openedCardMiddle);
+            Relocate(temp, closedCards.openedCardMiddle);
         }
         else if (closedCards.openedCardRight.currentCard == null)
         {
+            Helper.Instance.holdableCards.Remove(closedCards.openedCardMiddle.currentCard);
             closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = false;
-            Relocate(closedCards.untakenCards[tempInd], closedCards.openedCardRight);
+            Relocate(temp, closedCards.openedCardRight);
         }
         else
         {
+            Helper.Instance.holdableCards.Remove(closedCards.openedCardRight.currentCard);
             closedCards.openedCardRight.currentCard.m_CardImage.raycastTarget = false;
             closedCards.leftSlotStack.Add(closedCards.openedCardMiddle.currentCard);
             Relocate(closedCards.openedCardMiddle.currentCard, closedCards.openedCardLeft);
             Relocate(closedCards.openedCardRight.currentCard, closedCards.openedCardMiddle);
-            Relocate(closedCards.untakenCards[tempInd], closedCards.openedCardRight);
+            Relocate(temp, closedCards.openedCardRight);
         }
     }
 
@@ -65,12 +69,14 @@ public class OpenDeckCommand : Command{
         tempCard.m_CardImage.raycastTarget = false;
         tempCard.transform.DOMove(closedCards.closedCardsLocation.transform.position, 1f).SetEase(Ease.OutCubic); 
         tempCard.m_AllocatedSlot.currentCard = null;
+        Helper.Instance.holdableCards.Remove(tempCard);
 
         if (tempCard.m_AllocatedSlot == closedCards.openedCardLeft){
             closedCards.leftSlotStack.Remove(tempCard);
         }
         else if (tempCard.m_AllocatedSlot == closedCards.openedCardMiddle){
             closedCards.openedCardLeft.currentCard.m_CardImage.raycastTarget = true;
+            Helper.Instance.holdableCards.Add(closedCards.openedCardLeft.currentCard);
         }
         else if (tempCard.m_AllocatedSlot == closedCards.openedCardRight){
             if (closedCards.leftSlotStack.Count > 1){
@@ -79,9 +85,11 @@ public class OpenDeckCommand : Command{
                 Relocate(closedCards.leftSlotStack[closedCards.leftSlotStack.Count-2], closedCards.openedCardLeft);
                 closedCards.leftSlotStack.Remove(closedCards.openedCardMiddle.currentCard);
                 closedCards.openedCardRight.currentCard.m_CardImage.raycastTarget = true;
+                Helper.Instance.holdableCards.Add(closedCards.openedCardRight.currentCard);
             }
             else{
                 closedCards.openedCardMiddle.currentCard.m_CardImage.raycastTarget = true;
+                Helper.Instance.holdableCards.Add(closedCards.openedCardMiddle.currentCard);
             }
         }
     }

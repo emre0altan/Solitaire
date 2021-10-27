@@ -13,6 +13,7 @@ public class CloseDeckCommand : Command{
     
     public override void Execute(){
         closedCards.availableToOpen = false;
+        bool removed = false;
         if (closedCards.openedCardRight.currentCard != null)
         {
             closedCards.openedCardRight.currentCard.CloseCard();
@@ -20,6 +21,10 @@ public class CloseDeckCommand : Command{
             closedCards.openedCardRight.currentCard.transform.DOMove(closedCards.closedCardsLocation.rectTransform.position, 0.5f);
             closedCards.openedCardRight.currentCard.m_AllocatedSlot = null;
             closedCards.openedCardRight.currentCard = null;
+            if (!removed){
+                removed = true;
+                Helper.Instance.holdableCards.Remove(closedCards.openedCardRight.currentCard);
+            }
         }
 
         if (closedCards.openedCardMiddle.currentCard != null)
@@ -29,6 +34,10 @@ public class CloseDeckCommand : Command{
             closedCards.openedCardMiddle.currentCard.transform.DOMove(closedCards.closedCardsLocation.rectTransform.position, 0.5f);
             closedCards.openedCardMiddle.currentCard.m_AllocatedSlot = null;
             closedCards.openedCardMiddle.currentCard = null;
+            if (!removed){
+                removed = true;
+                Helper.Instance.holdableCards.Remove(closedCards.openedCardMiddle.currentCard);
+            }
         }
 
         while (closedCards.leftSlotStack.Count > 0)
@@ -39,6 +48,10 @@ public class CloseDeckCommand : Command{
             tmp.isOpened = false;
             tmp.transform.DOMove(closedCards.closedCardsLocation.rectTransform.position, 0.5f);
             tmp.m_AllocatedSlot = null;
+            if (!removed){
+                removed = true;
+                Helper.Instance.holdableCards.Remove(tmp);
+            }
         }
         closedCards.openedCardLeft.currentCard = null;
         closedCards.openIndex = 0;
@@ -78,6 +91,7 @@ public class CloseDeckCommand : Command{
                 closedCards.openedCardRight.currentCard = tmp;
             }
         }
+        Helper.Instance.holdableCards.Add(closedCards.untakenCards[closedCards.untakenCards.Count-1]);
         closedCards.openIndex = closedCards.untakenCards.Count;
         closedCards.closedCardsLocation.StartCoroutine(UndoOpenCardsDelay());
     }
