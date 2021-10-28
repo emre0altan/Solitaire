@@ -128,11 +128,11 @@ public class CardController : MonoBehaviour{
             if (allCards[i].m_AllocatedSlot.cardSlotType == CardSlotType.AceBase) atAceBaseCount++;
         }
 
-        if(isCompleted) StartCoroutine(CompletedCollectRoutine(atAceBaseCount));
+        if(isCompleted) StartCoroutine(CompletedCollectRoutine());
     }
 
-    IEnumerator CompletedCollectRoutine(int atAceBaseCount){
-        for (int i = 0; i < allCards.Count - atAceBaseCount; i++){
+    IEnumerator CompletedCollectRoutine(){
+        for (int i = 0; i < 13; i++){
             if (TryTakeForHeart())
                 yield return new WaitForSeconds(0.1f);
             if (TryTakeForDiamond()) 
@@ -304,7 +304,7 @@ public class CardController : MonoBehaviour{
         for (int i = 0; i < cardSlots.Count; i++)
         {
             cardSlots[i].image.raycastTarget = isOpen;
-            cardSlots[i].GetComponent<CardSlot>().availableImage.SetActive(isOpen);
+            //cardSlots[i].GetComponent<CardSlot>().availableImage.SetActive(isOpen);
         }
     }
     
